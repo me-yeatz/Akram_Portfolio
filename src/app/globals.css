@@ -226,11 +226,23 @@
 
   .hover-lift {
     transition: all 0.3s ease;
+    overflow: visible;
   }
 
   .hover-lift:hover {
     transform: translateY(-4px);
     box-shadow: 0 10px 25px -5px rgba(139, 115, 85, 0.15);
+  }
+
+  @media (max-width: 768px) {
+    .hover-lift {
+      transform: none;
+      box-shadow: 0 4px 6px -1px rgba(139, 115, 85, 0.1);
+    }
+
+    .hover-lift:hover {
+      transform: none;
+    }
   }
 
   .slide-in-left {

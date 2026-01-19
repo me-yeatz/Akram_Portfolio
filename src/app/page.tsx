@@ -29,56 +29,17 @@ import {
   GraduationCap
 } from 'lucide-react'
 
-// Typing animation hook - creates sleek character reveal
-const useTypingEffect = (text: string, speed: number = 100, startDelay: number = 0) => {
-  const [displayedText, setDisplayedText] = useState('')
-  const [isComplete, setIsComplete] = useState(false)
-  const [hasStarted, setHasStarted] = useState(false)
-
-  useEffect(() => {
-    const startTimer = setTimeout(() => setHasStarted(true), startDelay)
-    return () => clearTimeout(startTimer)
-  }, [startDelay])
-
-  useEffect(() => {
-    if (!hasStarted) return
-    if (displayedText.length < text.length) {
-      const timer = setTimeout(() => {
-        setDisplayedText(text.slice(0, displayedText.length + 1))
-      }, speed)
-      return () => clearTimeout(timer)
-    } else {
-      setIsComplete(true)
-    }
-  }, [displayedText, text, speed, hasStarted])
-
-  return { displayedText, isComplete, hasStarted }
-}
-
 export default function Home() {
-  const [showIntro, setShowIntro] = useState(true)
   const [activeSection, setActiveSection] = useState('home')
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-
-  // Typing effects for intro screen
-  const greeting = useTypingEffect("Hi, I'm", 80, 500)
-  const name = useTypingEffect("Akram Hadid", 100, 1500)
-  const role = useTypingEffect("Future Educator & Historian", 60, 3000)
+  const [selectedCertificate, setSelectedCertificate] = useState<string | null>(null)
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50)
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
-
-  // Auto-transition after typing completes
-  useEffect(() => {
-    if (role.isComplete) {
-      const timer = setTimeout(() => setShowIntro(false), 2000)
-      return () => clearTimeout(timer)
-    }
-  }, [role.isComplete])
 
   const navItems = [
     { id: 'home', label: 'Home', icon: GraduationCap },
@@ -97,97 +58,64 @@ export default function Home() {
     }
   }
 
-  // Sleek typing intro screen - chronark style
-  if (showIntro) {
-    return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 relative overflow-hidden">
-        {/* Subtle decorative blurs */}
-        <div className="absolute top-20 left-20 w-32 h-32 bg-accent/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-20 w-40 h-40 bg-primary/10 rounded-full blur-3xl" />
-
-        <div className="text-center max-w-3xl z-10">
-          {/* Top decorative line */}
-          <motion.div
-            initial={{ scaleX: 0 }}
-            animate={{ scaleX: 1 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="w-12 h-0.5 bg-accent mx-auto mb-12"
-          />
-
-          {/* Greeting */}
-          <div className="h-8 mb-4">
-            <span className="text-lg text-muted-foreground font-light tracking-wide">
-              {greeting.displayedText}
-              {!greeting.isComplete && greeting.hasStarted && (
-                <span className="cursor-blink text-accent">|</span>
-              )}
-            </span>
-          </div>
-
-          {/* Name - Large typography */}
-          <div className="h-20 sm:h-24 mb-6">
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-foreground">
-              {name.displayedText}
-              {!name.isComplete && name.hasStarted && (
-                <span className="cursor-blink text-accent">|</span>
-              )}
-            </h1>
-          </div>
-
-          {/* Role */}
-          <div className="h-10 mb-12">
-            <p className="text-xl sm:text-2xl text-muted-foreground font-light tracking-wide">
-              {role.displayedText}
-              {!role.isComplete && role.hasStarted && (
-                <span className="cursor-blink text-accent">|</span>
-              )}
-            </p>
-          </div>
-
-          {/* Enter button - appears after typing */}
-          <AnimatePresence>
-            {role.isComplete && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-              >
-                <button
-                  onClick={() => setShowIntro(false)}
-                  className="group flex items-center gap-2 mx-auto text-muted-foreground hover:text-foreground transition-colors duration-300"
-                >
-                  <span className="text-sm tracking-widest uppercase">Enter</span>
-                  <ChevronDown className="w-4 h-4 group-hover:translate-y-1 transition-transform" />
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* Bottom decorative line */}
-        <motion.div
-          initial={{ scaleX: 0 }}
-          animate={{ scaleX: 1 }}
-          transition={{ duration: 0.8, delay: 4 }}
-          className="absolute bottom-12 w-24 h-0.5 bg-secondary"
-        />
-      </div>
-    )
-  }
-
   return (
     <div className="min-h-screen bg-background text-foreground">
+      {/* Certificate Zoom Modal */}
+      <AnimatePresence>
+        {selectedCertificate && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={() => setSelectedCertificate(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="relative max-w-4xl w-full max-h-[90vh] bg-background rounded-lg overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Close button */}
+              <button
+                onClick={() => setSelectedCertificate(null)}
+                className="absolute top-4 right-4 z-10 p-2 bg-background/80 backdrop-blur-sm rounded-full hover:bg-background transition-colors border border-white/10"
+              >
+                <X className="w-6 h-6" />
+              </button>
+
+              {/* Certificate Image with Watermark */}
+              <div className="relative w-full h-full flex items-center justify-center bg-muted">
+                <img
+                  src={selectedCertificate}
+                  alt="Certificate Zoom View"
+                  className="max-w-full max-h-[85vh] object-contain"
+                />
+                <div className="absolute inset-0 flex items-center justify-center opacity-15 pointer-events-none">
+                  <img src="/logo-akram.png" alt="Watermark" className="w-40 h-40 object-contain" />
+                </div>
+              </div>
+
+              {/* Info footer */}
+              <div className="bg-background/50 backdrop-blur-sm border-t border-white/10 p-4 text-center text-sm text-muted-foreground">
+                Click outside or press X to close | View at full resolution for best clarity
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Navigation */}
-      <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-        scrolled ? 'bg-background/80 backdrop-blur-md border-b' : 'bg-transparent'
-      }`}>
+      <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled ? 'bg-background/80 backdrop-blur-md border-b' : 'bg-transparent'
+        }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center overflow-hidden">
-                <img 
-                  src="/logo-akram.png" 
-                  alt="Akram Hadid Logo" 
+                <img
+                  src="/logo-akram.png"
+                  alt="Akram Hadid Logo"
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -202,9 +130,8 @@ export default function Home() {
                   <button
                     key={item.id}
                     onClick={() => scrollToSection(item.id)}
-                    className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors hover:text-primary ${
-                      activeSection === item.id ? 'text-primary' : 'text-muted-foreground'
-                    }`}
+                    className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors hover:text-primary ${activeSection === item.id ? 'text-primary' : 'text-muted-foreground'
+                      }`}
                   >
                     <Icon className="w-4 h-4" />
                     <span>{item.label}</span>
@@ -233,9 +160,8 @@ export default function Home() {
                   <button
                     key={item.id}
                     onClick={() => scrollToSection(item.id)}
-                    className={`flex items-center space-x-2 w-full px-3 py-2 rounded-md text-base font-medium transition-colors hover:text-primary hover:bg-accent ${
-                      activeSection === item.id ? 'text-primary bg-accent' : 'text-muted-foreground'
-                    }`}
+                    className={`flex items-center space-x-2 w-full px-3 py-2 rounded-md text-base font-medium transition-colors hover:text-primary hover:bg-accent ${activeSection === item.id ? 'text-primary bg-accent' : 'text-muted-foreground'
+                      }`}
                   >
                     <Icon className="w-4 h-4" />
                     <span>{item.label}</span>
@@ -250,23 +176,33 @@ export default function Home() {
       {/* Hero Section */}
       <section id="home" className="min-h-screen flex items-center justify-center relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-secondary/5" />
+
+        {/* Decorative Logo Background */}
+        <div className="absolute -right-32 top-1/2 -translate-y-1/2 z-0 opacity-20 pointer-events-none">
+          <img
+            src="/logo-akram.png"
+            alt="Background Logo"
+            className="w-[600px] h-[600px] object-contain blur-lg"
+          />
+        </div>
+
         <div className="relative z-10 text-center px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
           <div className="space-y-6 animate-in">
             <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight">
               <span className="text-gradient">AKRAM HADID</span>
             </h1>
-            <h2 className="text-xl sm:text-2xl lg:text-3xl text-muted-foreground font-medium slide-in-from-bottom-4" style={{animationDelay: '0.2s'}}>
+            <h2 className="text-xl sm:text-2xl lg:text-3xl text-muted-foreground font-medium slide-in-from-bottom-4" style={{ animationDelay: '0.2s' }}>
               Bin Mohd Ali Nopiah
             </h2>
-            <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto slide-in-from-bottom-4" style={{animationDelay: '0.3s'}}>
+            <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto slide-in-from-bottom-4" style={{ animationDelay: '0.3s' }}>
               Bachelor of Social Science (History) with Honours
             </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-muted-foreground slide-in-from-bottom-4" style={{animationDelay: '0.4s'}}>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-muted-foreground slide-in-from-bottom-4" style={{ animationDelay: '0.4s' }}>
               <span>Universiti Malaysia Sabah</span>
               <Separator orientation="vertical" className="h-4 hidden sm:block" />
               <span>Graduated December 2025</span>
             </div>
-            <div className="flex flex-wrap justify-center gap-2 pt-4 slide-in-from-bottom-4" style={{animationDelay: '0.5s'}}>
+            <div className="flex flex-wrap justify-center gap-2 pt-4 slide-in-from-bottom-4" style={{ animationDelay: '0.5s' }}>
               <Badge variant="secondary" className="px-4 py-2 text-sm hover-lift">
                 <Star className="w-4 h-4 mr-2" />
                 Dean's List • 6 Semesters
@@ -275,14 +211,10 @@ export default function Home() {
                 <Award className="w-4 h-4 mr-2" />
                 First Class Honours
               </Badge>
-              <Badge variant="secondary" className="px-4 py-2 text-sm hover-lift">
-                <Target className="w-4 h-4 mr-2" />
-                CGPA 3.72/4.00
-              </Badge>
             </div>
-            <div className="pt-8 slide-in-from-bottom-4" style={{animationDelay: '0.6s'}}>
-              <Button 
-                size="lg" 
+            <div className="pt-8 slide-in-from-bottom-4" style={{ animationDelay: '0.6s' }}>
+              <Button
+                size="lg"
                 onClick={() => scrollToSection('about')}
                 className="px-8 py-6 text-lg hover-lift group"
               >
@@ -294,44 +226,101 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Professional Profile Section */}
+      <section id="profile" className="pt-24 pb-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-primary/5 to-background">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">Professional Profile</h2>
+          </div>
+
+          <Card className="p-8 hover-lift bg-card/80 backdrop-blur-sm border border-white/10">
+            <CardContent className="pt-0">
+              <div className="flex flex-col md:flex-row gap-8 items-stretch">
+                {/* Passport Style Photo */}
+                <div className="flex-shrink-0 mx-auto md:mx-0">
+                  <div className="relative w-32 h-48 md:w-40 md:h-60 rounded-lg overflow-hidden shadow-lg border-2 border-white/10 group cursor-pointer">
+                    <img
+                      src="/profile photo.jpg"
+                      alt="Akram Hadid - Profile Photo"
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300 ease-out"
+                    />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
+                  </div>
+                </div>
+
+                {/* Professional Content */}
+                <div className="flex-1 space-y-4">
+                  <div>
+                    <h3 className="text-2xl font-bold text-primary">AKRAM HADID</h3>
+                    <p className="text-lg text-muted-foreground font-semibold">Bachelor of Social Science (History) Honours</p>
+                  </div>
+
+                  <p className="text-base text-muted-foreground leading-relaxed text-justify">
+                    Motivated and detail-oriented historian with a passion for public administration and governance. Demonstrates strong leadership, communication, and organizational abilities through active participation in national and university-level programs. Skilled in research, strategic planning, stakeholder engagement, and academic writing.
+                  </p>
+
+                  <p className="text-base text-muted-foreground leading-relaxed text-justify">
+                    Proven experience in team coordination, customer service, and educational management. Committed to contributing to the development of effective policies and community-driven initiatives in Malaysia's public sector. Recognized achievements include Dean's List placement across 6 consecutive semesters and First Class Honours from Universiti Malaysia Sabah.
+                  </p>
+
+                  {/* Contact Information */}
+                  <div className="pt-4 border-t border-white/10">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                      <div className="flex items-start space-x-2">
+                        <Mail className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                        <div>
+                          <p className="text-muted-foreground">Email</p>
+                          <p className="font-semibold">contact@example.com</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start space-x-2">
+                        <Phone className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                        <div>
+                          <p className="text-muted-foreground">Phone</p>
+                          <p className="font-semibold">+60 XXX XXX XXXX</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start space-x-2">
+                        <MapPin className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                        <div>
+                          <p className="text-muted-foreground">Location</p>
+                          <p className="font-semibold">Kota Kinabalu, Malaysia</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start space-x-2">
+                        <GraduationCap className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                        <div>
+                          <p className="text-muted-foreground">University</p>
+                          <p className="font-semibold">UMS (Dec 2025)</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
       {/* About Section */}
       <section id="about" className="pt-24 pb-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">About Me</h2>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">Education Journey</h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Motivated and detail-oriented historian with a passion for public administration and governance
+              Academic progression from secondary education to university level
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8 mb-16">
-            <Card className="p-6 hover-lift slide-in-left">
-              <CardContent className="pt-6">
-                <div className="space-y-4">
-                  <h3 className="text-xl font-semibold flex items-center">
-                    <User className="w-5 h-5 mr-2 text-primary" />
-                    Professional Profile
-                  </h3>
-                  <p className="text-muted-foreground leading-relaxed">
-                    Motivated and detail-oriented Bachelor of Social Science (History) Honours graduate from Universiti Malaysia Sabah, 
-                    specializing in public administration, governance, and policy analysis. Demonstrates strong leadership, communication, 
-                    and organizational abilities through active participation in national and university-level programs.
-                  </p>
-                  <p className="text-muted-foreground leading-relaxed">
-                    Skilled in research, strategic planning, stakeholder engagement, and academic writing, with proven experience in 
-                    team coordination, customer service, and educational management. Committed to contributing to the development of 
-                    effective policies and community-driven initiatives in Malaysia's public sector.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
 
-            <Card className="p-6 hover-lift slide-in-right">
+            <Card className="p-6 hover-lift slide-in-right bg-card/80 backdrop-blur-sm border border-white/10">
               <CardContent className="pt-6">
                 <div className="space-y-4">
                   <h3 className="text-xl font-semibold flex items-center">
                     <BookOpen className="w-5 h-5 mr-2 text-primary" />
-                    Education Journey
+                    Education Timeline
                   </h3>
                   <div className="space-y-4">
                     <div className="border-l-2 border-primary pl-4">
@@ -345,6 +334,11 @@ export default function Home() {
                       <p className="text-sm text-muted-foreground">MARA University of Technology</p>
                       <p className="text-sm text-muted-foreground">July 2017 - Oct 2020</p>
                       <Badge variant="outline" className="mt-2">CGPA: 3.12/4.00</Badge>
+                    </div>
+                    <div className="border-l-2 border-muted pl-4">
+                      <h4 className="font-semibold">Sijil Pelajaran Malaysia (SPM)</h4>
+                      <p className="text-sm text-muted-foreground">Sekolah Menengah Kebangsaan Seri Kundang</p>
+                      <p className="text-sm text-muted-foreground">Rawang, Selangor | 2012 - 2016</p>
                     </div>
                   </div>
                 </div>
@@ -364,8 +358,8 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8">
-            <Card className="p-6 hover-lift scale-in">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card className="p-6 hover-lift scale-in bg-card/80 backdrop-blur-sm border border-white/10">
               <CardContent className="pt-6">
                 <h3 className="text-xl font-semibold mb-6 flex items-center">
                   <Trophy className="w-5 h-5 mr-2 text-primary" />
@@ -389,7 +383,7 @@ export default function Home() {
               </CardContent>
             </Card>
 
-            <Card className="p-6 hover-lift scale-in">
+            <Card className="p-6 hover-lift scale-in bg-card/80 backdrop-blur-sm border border-white/10">
               <CardContent className="pt-6">
                 <h3 className="text-xl font-semibold mb-6 flex items-center">
                   <Users className="w-5 h-5 mr-2 text-primary" />
@@ -415,137 +409,223 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Certificates Section */}
-      <section id="certificates" className="pt-24 pb-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-5xl mx-auto">
+      {/* Achievement Media Section */}
+      <section id="achievement-media" className="pt-24 pb-20 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">Certificates & Qualifications</h2>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">Achievement Media</h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Professional certifications and academic achievements
+              Visual collection of awards, recognitions, and memorable moments from competitions and events
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Card className="p-6 hover-lift group cursor-pointer">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between mb-4">
-                  <FileText className="w-8 h-8 text-primary" />
-                  <Badge variant="outline" className="text-xs">Academic</Badge>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {/* Akram Hadid Competition Award */}
+            <Card className="overflow-hidden hover-lift group bg-card/80 backdrop-blur-sm border border-white/10 cursor-pointer transition-all" onClick={() => setSelectedCertificate('/media/Akram Hadid.png')}>
+              <div className="relative h-64 bg-muted overflow-hidden">
+                <img
+                  src="/media/Akram Hadid.png"
+                  alt="Achievement - Akram Hadid"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                <div className="absolute inset-0 flex items-center justify-center opacity-20">
+                  <img src="/logo-akram.png" alt="Watermark" className="w-24 h-24 object-contain" />
                 </div>
-                <h3 className="font-semibold mb-2 group-hover:text-primary transition-colors">
-                  Dean's List Excellence
+              </div>
+              <CardContent className="p-6">
+                <div className="mb-4 inline-block bg-primary/10 text-primary px-4 py-1.5 rounded-r-full font-light text-sm">Achievement</div>
+                <h3 className="font-semibold text-lg mb-2 group-hover:text-primary transition-colors">
+                  Recognition & Achievement
                 </h3>
-                <p className="text-sm text-muted-foreground mb-3">
-                  Consistent academic excellence across 6 consecutive semesters
+                <p className="text-sm text-muted-foreground mb-4">
+                  Award and recognition from competitions and events. Celebrating achievement and memorable moments throughout academic and professional journey.
                 </p>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">2022-2025</span>
-                  <Eye className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                </div>
+                <Button variant="ghost" className="text-primary p-0 h-auto group/btn">
+                  <Eye className="w-4 h-4 mr-2 group-hover/btn:translate-y-0" />
+                  View
+                </Button>
               </CardContent>
             </Card>
 
-            <Card className="p-6 hover-lift group cursor-pointer">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between mb-4">
-                  <Award className="w-8 h-8 text-primary" />
-                  <Badge variant="outline" className="text-xs">Leadership</Badge>
+            {/* Graduation Photo */}
+            <Card className="overflow-hidden hover-lift group bg-card/80 backdrop-blur-sm border border-white/10 cursor-pointer transition-all" onClick={() => setSelectedCertificate('/media/graduations.JPG')}>
+              <div className="relative h-64 bg-muted overflow-hidden">
+                <img
+                  src="/media/graduations.JPG"
+                  alt="Graduation Day"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                <div className="absolute inset-0 flex items-center justify-center opacity-20">
+                  <img src="/logo-akram.png" alt="Watermark" className="w-24 h-24 object-contain" />
                 </div>
-                <h3 className="font-semibold mb-2 group-hover:text-primary transition-colors">
-                  Global Leadership Summit
+              </div>
+              <CardContent className="p-6">
+                <div className="mb-4 inline-block bg-primary/10 text-primary px-4 py-1.5 rounded-r-full font-light text-sm">Convocation</div>
+                <h3 className="font-semibold text-lg mb-2 group-hover:text-primary transition-colors">
+                  Graduation Day
                 </h3>
-                <p className="text-sm text-muted-foreground mb-3">
-                  Best Presenter in Sustainable Leadership & Crisis Management
+                <p className="text-sm text-muted-foreground mb-4">
+                  A significant milestone celebrating the completion of Bachelor of Social Science (History) with Honours from Universiti Malaysia Sabah.
                 </p>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">2024</span>
-                  <Eye className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                <Button variant="ghost" className="text-primary p-0 h-auto group/btn">
+                  <Eye className="w-4 h-4 mr-2 group-hover/btn:translate-y-0" />
+                  View Photo
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Certificates Gallery Section */}
+      <section id="certificates" className="pt-24 pb-20 px-4 sm:px-6 lg:px-8 bg-muted/30">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">Professional Certificates</h2>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              Official certifications and qualifications showcasing expertise and achievements
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {/* Degree First Class Certificate */}
+            <Card className="overflow-hidden hover-lift group bg-card/80 backdrop-blur-sm border border-white/10 cursor-pointer transition-all" onClick={() => setSelectedCertificate('/Certificate/Cert_Degree First Class.jpg')}>
+              <div className="relative h-64 bg-muted overflow-hidden">
+                <img
+                  src="/Certificate/Cert_Degree First Class.jpg"
+                  alt="Degree First Class Certificate"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                <div className="absolute inset-0 flex items-center justify-center opacity-20">
+                  <img src="/logo-akram.png" alt="Watermark" className="w-24 h-24 object-contain" />
                 </div>
+              </div>
+              <CardContent className="p-6">
+                <div className="mb-4 inline-block bg-primary/10 text-primary px-4 py-1.5 rounded-r-full font-light text-sm">Academic</div>
+                <h3 className="font-semibold text-lg mb-2 group-hover:text-primary transition-colors">
+                  Degree First Class Honours
+                </h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Bachelor's Degree awarded with First Class Honours. Recognition of outstanding academic performance and comprehensive knowledge in the field of study.
+                </p>
+                <Button variant="ghost" className="text-primary p-0 h-auto group/btn">
+                  <Eye className="w-4 h-4 mr-2 group-hover/btn:translate-y-0" />
+                  View Certificate
+                </Button>
               </CardContent>
             </Card>
 
-            <Card className="p-6 hover-lift group cursor-pointer">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between mb-4">
-                  <Trophy className="w-8 h-8 text-primary" />
-                  <Badge variant="outline" className="text-xs">Public Speaking</Badge>
+            {/* JAKMAS Certificate */}
+            <Card className="overflow-hidden hover-lift group bg-card/80 backdrop-blur-sm border border-white/10 cursor-pointer transition-all" onClick={() => setSelectedCertificate('/Certificate/Cert_Jakmas.jpg')}>
+              <div className="relative h-64 bg-muted overflow-hidden">
+                <img
+                  src="/Certificate/Cert_Jakmas.jpg"
+                  alt="JAKMAS Certificate"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                <div className="absolute inset-0 flex items-center justify-center opacity-20">
+                  <img src="/logo-akram.png" alt="Watermark" className="w-24 h-24 object-contain" />
                 </div>
-                <h3 className="font-semibold mb-2 group-hover:text-primary transition-colors">
-                  National Oratory Champion
+              </div>
+              <CardContent className="p-6">
+                <div className="mb-4 inline-block bg-primary/10 text-primary px-4 py-1.5 rounded-r-full font-light text-sm">Leadership</div>
+                <h3 className="font-semibold text-lg mb-2 group-hover:text-primary transition-colors">
+                  JAKMAS Student Welfare
                 </h3>
-                <p className="text-sm text-muted-foreground mb-3">
-                  Champion of National SMJ Oratory Competition
+                <p className="text-sm text-muted-foreground mb-4">
+                  Certificate from JAKMAS (Student Welfare Committee) recognizing leadership and contribution to student welfare initiatives and community development.
                 </p>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">2023</span>
-                  <Eye className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                </div>
+                <Button variant="ghost" className="text-primary p-0 h-auto group/btn">
+                  <Eye className="w-4 h-4 mr-2 group-hover/btn:translate-y-0" />
+                  View Certificate
+                </Button>
               </CardContent>
             </Card>
 
-            <Card className="p-6 hover-lift group cursor-pointer">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between mb-4">
-                  <BookOpen className="w-8 h-8 text-primary" />
-                  <Badge variant="outline" className="text-xs">Research</Badge>
+            {/* SEPENA Certificate */}
+            <Card className="overflow-hidden hover-lift group bg-card/80 backdrop-blur-sm border border-white/10 cursor-pointer transition-all" onClick={() => setSelectedCertificate('/Certificate/Cert_Sepena.jpg')}>
+              <div className="relative h-64 bg-muted overflow-hidden">
+                <img
+                  src="/Certificate/Cert_Sepena.jpg"
+                  alt="SEPENA Certificate"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                <div className="absolute inset-0 flex items-center justify-center opacity-20">
+                  <img src="/logo-akram.png" alt="Watermark" className="w-24 h-24 object-contain" />
                 </div>
-                <h3 className="font-semibold mb-2 group-hover:text-primary transition-colors">
-                  Academic Writing Excellence
+              </div>
+              <CardContent className="p-6">
+                <div className="mb-4 inline-block bg-primary/10 text-primary px-4 py-1.5 rounded-r-full font-light text-sm">Professional Development</div>
+                <h3 className="font-semibold text-lg mb-2 group-hover:text-primary transition-colors">
+                  SEPENA Professional Program
                 </h3>
-                <p className="text-sm text-muted-foreground mb-3">
-                  A+ Grade for Thesis on Cultural Studies
+                <p className="text-sm text-muted-foreground mb-4">
+                  Professional development certificate from SEPENA program. Demonstrates commitment to continuous learning and skill enhancement in professional competencies.
                 </p>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">2025</span>
-                  <Eye className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                </div>
+                <Button variant="ghost" className="text-primary p-0 h-auto group/btn">
+                  <Eye className="w-4 h-4 mr-2 group-hover/btn:translate-y-0" />
+                  View Certificate
+                </Button>
               </CardContent>
             </Card>
 
-            <Card className="p-6 hover-lift group cursor-pointer">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between mb-4">
-                  <Users className="w-8 h-8 text-primary" />
-                  <Badge variant="outline" className="text-xs">Entrepreneurship</Badge>
+            {/* Exco Kebudayaan Certificate */}
+            <Card className="overflow-hidden hover-lift group bg-card/80 backdrop-blur-sm border border-white/10 cursor-pointer transition-all" onClick={() => setSelectedCertificate('/Certificate/Cert.Exco Kebudayaan.jpg')}>
+              <div className="relative h-64 bg-muted overflow-hidden">
+                <img
+                  src="/Certificate/Cert.Exco Kebudayaan.jpg"
+                  alt="Exco Kebudayaan Certificate"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                <div className="absolute inset-0 flex items-center justify-center opacity-20">
+                  <img src="/logo-akram.png" alt="Watermark" className="w-24 h-24 object-contain" />
                 </div>
-                <h3 className="font-semibold mb-2 group-hover:text-primary transition-colors">
-                  Entrepreneurship Icon Award
+              </div>
+              <CardContent className="p-6">
+                <div className="mb-4 inline-block bg-primary/10 text-primary px-4 py-1.5 rounded-r-full font-light text-sm">Cultural Affairs</div>
+                <h3 className="font-semibold text-lg mb-2 group-hover:text-primary transition-colors">
+                  Executive Committee - Arts & Culture
                 </h3>
-                <p className="text-sm text-muted-foreground mb-3">
-                  Recognized for entrepreneurial excellence in Social Sciences
+                <p className="text-sm text-muted-foreground mb-4">
+                  Certificate of appointment as Executive Committee member in the Arts and Culture Bureau. Recognition for cultural leadership and organizational contribution.
                 </p>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">2020</span>
-                  <Eye className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                </div>
+                <Button variant="ghost" className="text-primary p-0 h-auto group/btn">
+                  <Eye className="w-4 h-4 mr-2 group-hover/btn:translate-y-0" />
+                  View Certificate
+                </Button>
               </CardContent>
             </Card>
 
-            <Card className="p-6 hover-lift group cursor-pointer">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between mb-4">
-                  <Globe className="w-8 h-8 text-primary" />
-                  <Badge variant="outline" className="text-xs">International</Badge>
+            {/* Dewan Pustaka Certificate */}
+            <Card className="overflow-hidden hover-lift group bg-card/80 backdrop-blur-sm border border-white/10 cursor-pointer transition-all" onClick={() => setSelectedCertificate('/Certificate/Cert. Dewan Pustaka.jpg')}>
+              <div className="relative h-64 bg-muted overflow-hidden">
+                <img
+                  src="/Certificate/Cert. Dewan Pustaka.jpg"
+                  alt="Dewan Pustaka Certificate"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                <div className="absolute inset-0 flex items-center justify-center opacity-20">
+                  <img src="/logo-akram.png" alt="Watermark" className="w-24 h-24 object-contain" />
                 </div>
-                <h3 className="font-semibold mb-2 group-hover:text-primary transition-colors">
-                  International Program Certificate
+              </div>
+              <CardContent className="p-6">
+                <div className="mb-4 inline-block bg-primary/10 text-primary px-4 py-1.5 rounded-r-full font-light text-sm">Recognition</div>
+                <h3 className="font-semibold text-lg mb-2 group-hover:text-primary transition-colors">
+                  Dewan Pustaka Recognition
                 </h3>
-                <p className="text-sm text-muted-foreground mb-3">
-                  Cultural Exchange Program - Indonesia & Thailand
+                <p className="text-sm text-muted-foreground mb-4">
+                  Certificate of recognition from Dewan Pustaka for contribution to literary and cultural initiatives. Demonstrates commitment to preserving and promoting cultural heritage.
                 </p>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">2024</span>
-                  <Eye className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                </div>
+                <Button variant="ghost" className="text-primary p-0 h-auto group/btn">
+                  <Eye className="w-4 h-4 mr-2 group-hover/btn:translate-y-0" />
+                  View Certificate
+                </Button>
               </CardContent>
             </Card>
           </div>
 
-          <div className="text-center mt-12">
-            <Button variant="outline" className="group">
-              <Download className="w-4 h-4 mr-2 group-hover:translate-y-1 transition-transform" />
-              Download All Certificates
-            </Button>
+          <div className="text-center mt-16">
+            <p className="text-muted-foreground">All certificates are available for verification upon request</p>
           </div>
         </div>
       </section>
@@ -560,9 +640,9 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-8">
-              <Card className="p-6 hover-lift">
+              <Card className="p-6 hover-lift bg-card/80 backdrop-blur-sm border border-white/10">
                 <CardContent className="pt-6">
                   <h3 className="text-xl font-semibold mb-6 flex items-center">
                     <Briefcase className="w-5 h-5 mr-2 text-primary" />
@@ -605,7 +685,7 @@ export default function Home() {
             </div>
 
             <div className="space-y-8">
-              <Card className="p-6 hover-lift">
+              <Card className="p-6 hover-lift bg-card/80 backdrop-blur-sm border border-white/10">
                 <CardContent className="pt-6">
                   <h3 className="text-xl font-semibold mb-6 flex items-center">
                     <Mail className="w-5 h-5 mr-2 text-primary" />
@@ -628,7 +708,7 @@ export default function Home() {
                 </CardContent>
               </Card>
 
-              <Card className="p-6 hover-lift">
+              <Card className="p-6 hover-lift bg-card/80 backdrop-blur-sm border border-white/10">
                 <CardContent className="pt-6">
                   <h3 className="text-xl font-semibold mb-6 flex items-center">
                     <Target className="w-5 h-5 mr-2 text-primary" />
@@ -665,9 +745,9 @@ export default function Home() {
         <div className="max-w-5xl mx-auto text-center">
           <div className="flex items-center justify-center space-x-2 mb-4">
             <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center overflow-hidden">
-              <img 
-                src="/logo-akram.png" 
-                alt="Akram Hadid Logo" 
+              <img
+                src="/logo-akram.png"
+                alt="Akram Hadid Logo"
                 className="w-full h-full object-cover"
               />
             </div>
