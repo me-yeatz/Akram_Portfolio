@@ -27,7 +27,8 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Akram Hadid - Professional Portfolio",
     description: "Bachelor of Social Science (History) with Honours - Universiti Malaysia Sabah",
-    url: "https://your-portfolio-url.com",
+    url: "https://akram-hadid.vercel.app",
+
     siteName: "Akram Hadid Portfolio",
     images: [
       {
